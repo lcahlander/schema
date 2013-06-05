@@ -6,7 +6,7 @@ declare namespace xs="http://www.w3.org/2001/XMLSchema";
 
 import module namespace templates="http://exist-db.org/xquery/templates" ;
 import module namespace config="http://exist-db.org/apps/schema/config" at "config.xqm";
-import module namespace st="http://danmccreary.com/schema-typeswitch" at "schema-typeswitch.xqm";
+import module namespace s2svg="http://greatlinkup.com/ns/schema2svg" at "schema2svg.xqm";
 
 declare function local:escape-for-regex 
   ( $arg as xs:string? )  as xs:string {
@@ -32,7 +32,7 @@ declare function local:substring-before-last
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     
-    return st:schema($root)
+    return s2svg:svg($root, $doc)
 };
  (:~
  : This is a sample templating function. It will be called by the templating module if
