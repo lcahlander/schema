@@ -1,6 +1,7 @@
 xquery version "3.0";
 
 module namespace s2svg="http://greatlinkup.com/ns/schema2svg";
+import module namespace s2svgdim="http://greatlinkup.com/ns/schema2svgdim" at "schema2svgdim.xqm";
 
 declare namespace xs = "http://www.w3.org/2001/XMLSchema";
 
@@ -42,6 +43,17 @@ declare %public function s2svg:svg($node as node(), $doc as node()) {
     ]]></style>
     {s2svg:process-node($node, $doc)}
 </svg>
+};
+
+declare %private function s2svg:schema-from-prefix($name as xs:string, $doc as node()) as node()
+{
+    let $namespace-uri := namespace-uri-from-QName(resolve-QName($name, $doc/xs:schema))
+    let $import := $doc/*/xs:import[@namespace eq string($namespace-uri)]
+    return if ($import) then 
+    let $schemaLocation := string($import/@schemaLocation)
+    let $fullURI := resolve-uri($schemaLoc, base-uri($doc))
+    return doc($fullURI)
+     else $doc
 };
 
 declare %public function s2svg:process-node($node as node(), $doc as node()) {
@@ -107,8 +119,21 @@ declare %public function s2svg:annotation($node as node(), $doc as node()) {
 };
 
 declare %public function s2svg:any($node as node(), $doc as node()) {
-    ()
-};
+<g transform="translate(50, 190)" class="any">
+    <polygon points="0,10 10,0 50,0 60,10  60,40 50,50  10,50 0,40"  fill="none" stroke="black" stroke-width="2"/>
+    <circle fill="black" r="5" cx="30" cy="12"/>
+    <circle fill="black" r="5" cx="30" cy="25"/>
+    <circle fill="black" r="5" cx="30" cy="38"/>
+    <line x1="2" y1="25" x2="58" y2="25" stroke="black"/>
+    <line x1="12" y1="12" x2="48" y2="12" stroke="black"/>
+    <line x1="12" y1="38" x2="48" y2="38" stroke="black"/>
+    <line x1="12" y1="12" x2="12" y2="38" stroke="black"/>
+    <line x1="48" y1="12" x2="48" y2="38" stroke="black"/>
+    {for $ele at $count in $node/xs:element
+          return
+             s2svg:element($ele, $doc, 10, $count * 70, $ele/@name/string(), true(), '0..N', 'Annotation')
+     }
+</g>};
 
 declare %public function s2svg:anyAttribute($node as node(), $doc as node()) {
     ()
@@ -140,7 +165,7 @@ declare %public function s2svg:choice($node as node(), $doc as node()) {
     <line x1="48" y1="12" x2="48" y2="38" stroke="black"/>
     {for $ele at $count in $node/xs:element
           return
-             s2svg:element($ele, 10, $count * 70, $ele/@name/string(), true(), '0..N', 'Annotation')
+             s2svg:element($ele, $doc, 10, $count * 70, $ele/@name/string(), true(), '0..N', 'Annotation')
      }
 </g>
 };
@@ -169,18 +194,21 @@ declare %public function s2svg:documentation($node as node(), $doc as node()) {
 
 declare %public function s2svg:element($node as node(), $doc as node()) {
     if ($node/@name)
-        then s2svg:element($node, 10, 0, string($node/@name), true(), '0..N', 'Annotation')
-        else s2svg:element($node, 10, 0, string($node/@ref), true(), '0..N', 'Annotation')
+        then s2svg:element($node, $doc, 10, 0, string($node/@name), true(), '0..N', 'Annotation')
+        else s2svg:element($node, $doc, 10, 0, string($node/@ref), true(), '0..N', 'Annotation')
 };
 
-declare function s2svg:element($node as node(), $x as xs:integer, $y as xs:integer, $name as xs:string, $optional as xs:boolean, 
+declare function s2svg:element($node as node(), $doc as node(), $x as xs:integer, $y as xs:integer, $name as xs:string, $optional as xs:boolean, 
    $cardinality as xs:string, $annotation as xs:string) as node() {
 <g class="element" transform="translate({$x} {$y})">
-    <line x1="0" x2="20" y1="14" y2="14" stroke="black" stroke-width="2"/>
+    <line x1="0" x2="11" y1="14" y2="14" stroke="black" stroke-width="2"/>
     <rect x="10" y="0" rx="5" ry="5" width="250" height="28" class="xsd-required"/>
     <text x="15" y="20" class="xsd-text">{$name}</text>
     <text x="15" y="45" class="annotation-text" fill="gray">{$cardinality}</text>
     <text x="20" y="60" class="annotation-text" fill="gray">{$annotation}</text>
+   <g transform="translate(100 0)">
+      {s2svg:recurse($node, $doc)}
+   </g>
 </g>
 };
 
@@ -290,7 +318,7 @@ return
     <g transform="translate(40 0)">
     {for $ele at $count in $node/xs:element
           return
-             s2svg:element($ele, 20, $count * 70, $ele/@name/string(), true(), '0..N', 'Annotation')
+             s2svg:element($ele, $doc, 20, $count * 70, $ele/@name/string(), true(), '0..N', 'Annotation')
      }
      </g>
 </g>
