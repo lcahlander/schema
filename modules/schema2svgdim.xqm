@@ -18,9 +18,12 @@ declare %private function s2svgdim:schema-from-prefix($name as xs:string, $doc a
 };
 
 declare %public function s2svgdim:sum-coordinates($coordinates as node()*) {
-    let $x := max($coordinates//x/number())
-    let $y := sum($coordinates//y/number())
-    return s2svgdim:coordinate($x, $y)
+    if ($coordinates)
+    then
+        let $x := max($coordinates//x/number())
+        let $y := sum($coordinates//y/number())
+        return s2svgdim:coordinate($x, $y)
+    else s2svgdim:coordinate(0, 0)
 };
 
 declare %public function s2svgdim:add-depth($coordinates as node()*) {

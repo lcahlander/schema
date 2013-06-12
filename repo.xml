@@ -2,7 +2,7 @@
 <meta xmlns="http://exist-db.org/xquery/repo">
     <description>XML Schema Viewer</description>
     <author>Loren Cahlander</author>
-    <website/>
+    <website>http://greatlinkup.com</website>
     <status>alpha</status>
     <license>GNU-LGPL</license>
     <copyright>true</copyright>

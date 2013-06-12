@@ -9,6 +9,7 @@ import module namespace config="http://exist-db.org/apps/schema/config" at "conf
 import module namespace s2svg="http://greatlinkup.com/ns/schema2svg" at "schema2svg.xqm";
 import module namespace s2svgdim="http://greatlinkup.com/ns/schema2svgdim" at "schema2svgdim.xqm";
 import module namespace s2bootstrap="http://greatlinkup.com/ns/schema2bootstrap" at "schema2bootstrap.xqm";
+import module namespace s2instance="http://greatlinkup.com/ns/schema2instance" at "schema2instance.xqm";
 
  (:~
  : This templating function displays the index to the XML Schema documentation. It will be called by the templating module if
@@ -26,12 +27,12 @@ declare function app:schema($node as node(), $model as map(*)) {
     return
     (<h2>{$schema}</h2>,
     $documentation,
-    <h3>Imports</h3>,
+    <div class="well well-small"><span class="label">Imports</span>{
     for $element in $doc/*/xs:import
-    return s2bootstrap:import($element, $doc),
-    <h3>Items</h3>,
+    return s2bootstrap:import($element, $doc)}</div>,
+    <div class="well well-small"><span class="label">Items</span>{
     for $element in $doc/*/*[@name]
-    return s2bootstrap:display-list-item($element, $doc))
+    return s2bootstrap:display-list-item($element, $doc)}</div>)
 };
 
  (:~
@@ -47,8 +48,7 @@ declare function app:item-detail($node as node(), $model as map(*)) {
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     
-    return (<h2>{$root/local-name()}: {$root/@name/string()}</h2>,
-            s2bootstrap:process-node($root, $doc))
+    return s2bootstrap:process-node($root, $doc)
 };
  (:~
  : This templating function displays the XML Schema item's graphical view in SVG. It will be called by the templating module if
@@ -63,7 +63,7 @@ declare function  app:svg($node as node(), $model as map(*)) {
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     
-    return s2svg:svg($root, $doc)
+    return s2svg:svg($root, $doc, 3)
 };
 
  (:~
@@ -79,6 +79,27 @@ declare function  app:svg($node as node(), $model as map(*)) {
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     let $dim := s2svgdim:process-node($root, 3)
-    
-    return <div class="alert alert-success">X: {$dim//x/text()} Y: {$dim//y/text()}</div>
+    let $elem := util:serialize(s2instance:process-node($root, $doc),"method=xml")
+    return (<div class="alert alert-success">X: {$dim//x/text()} Y: {$dim//y/text()} -- {($dim//y/number() div 2) - 35}</div>,
+    <div class="code" data-language="xml">
+            { replace($elem, "^\s+", "") }
+            </div>)
+};
+
+ (:~
+ : This templating function displays the XML Schema item's graphical view dimensions in SVG. It will be called by the templating module if
+ : it encounters an HTML element with a class attribute: class="app:svgdim".
+ : 
+ : @param $node the HTML node with the class attribute which triggered this call
+ : @param $model a map containing arbitrary data - used to pass information between template calls
+ :)
+ declare function  app:instance($node as node(), $model as map(*)) {
+
+    let $schema := request:get-parameter('schema', '')
+    let $doc:= doc($schema)
+    let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
+    let $elem := util:serialize(s2instance:process-node($root, $doc),"method=xml")
+    return <div class="code" data-language="xml">
+            { replace($elem, "^\s+", "") }
+            </div>
 };

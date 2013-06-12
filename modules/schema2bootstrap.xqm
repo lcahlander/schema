@@ -86,7 +86,7 @@ declare function s2bootstrap:display-attributes($nodes as node()*) as item()* {
 };
 
 declare function s2bootstrap:display-list-item($element as node(), $doc as node()) {
-    <div class="well">
+    <div class="container schema-border">
         <div class="span2">{string($element/local-name())}</div>
         <div class="span4"><a href="item.html?schema={request:get-parameter('schema', '')}&amp;type={string($element/local-name())}&amp;name={string($element/@name)}">{string($element/@name)}</a></div>
         {if ($element/xs:annotation/xs:documentation) then <div class="span6">{$element/xs:annotation/xs:documentation[1]}</div> else ()}
@@ -173,21 +173,25 @@ declare %public function s2bootstrap:complexContent($node as node(), $doc as nod
 };
 
 declare %public function s2bootstrap:complexType($node as node(), $doc as node()) {
-    if ($node/@ref) then
-    let $base := string($node/@ref)
+    if ($node/@name) then
+    let $base := string($node/@name)
     let $eDoc := s2bootstrap:schema-from-prefix($base, $doc)
     let $extension := $eDoc//*[string(@name) eq substring-after($base, ':')]
     return
         <div class="well">ComplexType: {$base}
         {s2bootstrap:display-attributes(($node, $extension))}
         {s2bootstrap:displayType($doc, $extension)}
-        {s2bootstrap:recurse($extension, $eDoc)}
         {s2bootstrap:recurse($node, $doc)}
         </div>
-    else 
-    let $base := string($node/@name)
-    return
-        <div class="well">ComplexType: {$base}
+    else if (request:get-parameter('detail', ''))
+    then
+        <div class="well">ComplexType
+        {s2bootstrap:display-attributes(($node))}
+        {s2bootstrap:displayType($doc, $node)}
+        {s2bootstrap:recurse($node, $doc)}
+        </div>
+    else
+        <div>
         {s2bootstrap:display-attributes(($node))}
         {s2bootstrap:displayType($doc, $node)}
         {s2bootstrap:recurse($node, $doc)}
@@ -273,9 +277,13 @@ declare %public function s2bootstrap:import($node as node(), $doc as node()) {
     let $namespace := string($node/@namespace)
     let $schemaLoc := string($node/@schemaLocation)
     let $absURI := resolve-uri($schemaLoc, base-uri($doc))
-    return <div class="well">
-                <div class="span6">{$namespace}</div>
-                <div class="span6"><a href="index.html?schema={$absURI}">{$absURI}</a></div>
+    return <div class="container schema-border">
+                <div class="span4"><a href="schema.html?schema={$absURI}">{functx:substring-after-last($absURI, "/")}</a></div>
+                <div class="span8"><dl>
+                    <dt>Target Namespace</dt><dd>{$namespace}</dd>
+                    <dt>Schema Location:</dt><dd><a href="{$absURI}">{$absURI}</a></dd>
+                    </dl>
+                </div>
            </div>
 };
 

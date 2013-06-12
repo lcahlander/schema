@@ -3,9 +3,16 @@
     <xs:element name="foo">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="bar">
-                    <xs:complexType/>
+                <xs:element name="bar" minOccurs="1" maxOccurs="unbounded" type="xs:string" default="My Sign">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <div xmlns="http://www.w3.org/1999/xhtml">
+                                <p>Now is the time...</p>
+                            </div>
+                        </xs:documentation>
+                    </xs:annotation>
                 </xs:element>
+                <xs:element name="baz" minOccurs="0" type="xs:string" default="Hello World"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
