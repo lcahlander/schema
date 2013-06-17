@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+<xs:schema xmlns="http://greatlinkup.com/EXAMPLE/utilization/1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:canonical="http://greatlinkup.com/EXAMPLE/base/1.0" targetNamespace="http://greatlinkup.com/EXAMPLE/utilization/1.0" elementFormDefault="qualified">
+    <xs:import namespace="http://greatlinkup.com/EXAMPLE/base/1.0" schemaLocation="../schemas/test-base.xsd"/>
     <xs:element name="foo">
         <xs:complexType>
-            <xs:sequence>
-                <xs:element name="bar" minOccurs="1" maxOccurs="unbounded" type="xs:string" default="My Sign">
-                    <xs:annotation>
-                        <xs:documentation>
-                            <div xmlns="http://www.w3.org/1999/xhtml">
-                                <p>Now is the time...</p>
-                            </div>
-                        </xs:documentation>
-                    </xs:annotation>
-                </xs:element>
-                <xs:element name="baz" minOccurs="0" type="xs:string" default="Hello World"/>
-            </xs:sequence>
+            <xs:group ref="canonical:foo"/>
         </xs:complexType>
     </xs:element>
 </xs:schema>

@@ -2,6 +2,7 @@ xquery version "3.0";
 
 module namespace s2svg="http://greatlinkup.com/ns/schema2svg";
 import module namespace s2svgdim="http://greatlinkup.com/ns/schema2svgdim" at "schema2svgdim.xqm";
+import module namespace s2util = "http://greatlinkup.com/ns/schema-util" at "schema-util.xqm";
 
 declare namespace xs = "http://www.w3.org/2001/XMLSchema";
 
@@ -45,18 +46,7 @@ declare %public function s2svg:svg($node as node(), $doc as node(), $depth as xs
 </svg>
 };
 
-declare %private function s2svg:schema-from-prefix($name as xs:string, $doc as node()) as node()
-{
-    let $namespace-uri := namespace-uri-from-QName(resolve-QName($name, $doc/xs:schema))
-    let $import := $doc/*/xs:import[@namespace eq string($namespace-uri)]
-    return if ($import) then 
-    let $schemaLocation := string($import/@schemaLocation)
-    let $fullURI := resolve-uri($schemaLoc, base-uri($doc))
-    return doc($fullURI)
-     else $doc
-};
-
-declare %public function s2svg:process-node($node as node(), $doc as node(), $depth as xs:double) {
+declare %public function s2svg:process-node($node as node()?, $doc as node(), $depth as xs:double) {
     if ($node) then 
     typeswitch($node) 
         case text() return $node 
@@ -152,7 +142,12 @@ declare %public function s2svg:attributeGroup($node as node(), $doc as node(), $
 };
 
 declare %public function s2svg:choice($node as node(), $doc as node(), $depth as xs:double) {
-<g transform="translate(50, 105)" class="choice">
+    let $height := count($node/*) * 70
+    let $dim := s2svgdim:process-node($node, $depth)
+    let $y := ($dim//y/number() div 2)
+return
+<g class="sequence">
+    <g transform="translate(-80, {$height div 2 - 10 - $y})" class="choice">
     <polygon points="0,10 10,0 50,0 60,10  60,40 50,50  10,50 0,40" fill="none" stroke="black" stroke-width="2"/>
     <circle fill="black" r="5" cx="30" cy="12"/>
     <circle fill="black" r="5" cx="30" cy="25"/>
@@ -163,10 +158,13 @@ declare %public function s2svg:choice($node as node(), $doc as node(), $depth as
     <line x1="25" y1="12" x2="48" y2="12" stroke="black"/>
     <line x1="25" y1="38" x2="48" y2="38" stroke="black"/>
     <line x1="48" y1="12" x2="48" y2="38" stroke="black"/>
+    </g>
+    <g transform="translate(10 -30)">
     {for $ele at $count in $node/xs:element
           return
-             s2svg:element($ele, $doc, 10, $count * 70, $ele/@name/string(), true(), '0..N', 'Annotation', $depth - 1)
+             s2svg:element($ele, $doc, 10, ($count - 1) * 70, $ele/@name/string(), true(), '0..N', 'Annotation', $depth - 1)
      }
+     </g>
 </g>
 };
 
@@ -198,7 +196,14 @@ declare %public function s2svg:element($node as node(), $doc as node(), $depth a
     return 
     if ($node/@name)
         then s2svg:element($node, $doc, 10, $y, string($node/@name), true(), '0..N', 'Annotation', $depth)
-        else s2svg:element($node, $doc, 10, $y, string($node/@ref), true(), '0..N', 'Annotation', $depth)
+        else 
+            let $base := string($node/@ref)
+            let $eDoc := s2util:schema-from-prefix($base, $doc)
+            let $matchName := if (contains($base, ':'))
+                                then substring-after($base, ':')
+                                else $base
+            let $extension := $eDoc//*[string(@name) eq $matchName][1]
+            return s2svg:element($extension, $eDoc, 10, $y, string($node/@ref), true(), '0..N', 'Annotation', $depth + 1)
 };
 
 declare function s2svg:element($node as node(), $doc as node(), $x as xs:integer, $y as xs:integer, $name as xs:string, $optional as xs:boolean, 
@@ -322,8 +327,9 @@ return
     </g>
     <g transform="translate(10 -30)">
     {for $ele at $count in $node/xs:element
+            let $name := if ($ele/@name) then $ele/@name/string() else $ele/@ref/string()
           return
-             s2svg:element($ele, $doc, 10, ($count - 1) * 70, $ele/@name/string(), true(), '0..N', 'Annotation', $depth - 1)
+             s2svg:element($ele, $doc, 10, ($count - 1) * 70, $name, true(), '0..N', 'Annotation', $depth - 1)
      }
      </g>
 </g>

@@ -22,17 +22,18 @@ declare function app:schema($node as node(), $model as map(*)) {
     let $schema := request:get-parameter('schema', '')
     let $doc:= doc($schema)
     let $documentation := for $note in $doc/xs:schema/xs:annotation/xs:documentation
-                            return s2bootstrap:documentation($note, $doc)
+                            return s2bootstrap:documentation($note, $doc, map:new())
     
     return
     (<h2>{$schema}</h2>,
     $documentation,
     <div class="well well-small"><span class="label">Imports</span>{
     for $element in $doc/*/xs:import
-    return s2bootstrap:import($element, $doc)}</div>,
+    return s2bootstrap:import($element, $doc, map:new())}</div>,
     <div class="well well-small"><span class="label">Items</span>{
     for $element in $doc/*/*[@name]
-    return s2bootstrap:display-list-item($element, $doc)}</div>)
+    order by $element/@name/string()
+    return s2bootstrap:display-list-item($element, $doc, map:new())}</div>)
 };
 
  (:~
@@ -48,7 +49,7 @@ declare function app:item-detail($node as node(), $model as map(*)) {
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     
-    return s2bootstrap:process-node($root, $doc)
+    return s2bootstrap:process-node($root, $doc, map:new())
 };
  (:~
  : This templating function displays the XML Schema item's graphical view in SVG. It will be called by the templating module if

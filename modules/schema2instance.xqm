@@ -1,8 +1,9 @@
 xquery version "3.0";
 
 module namespace s2instance="http://greatlinkup.com/ns/schema2instance";
+import module namespace s2util = "http://greatlinkup.com/ns/schema-util" at "schema-util.xqm";
 
-declare function s2instance:process-node($node as node(), $doc as node()) {
+declare function s2instance:process-node($node as node()?, $doc as node()) {
     if ($node) then 
     typeswitch($node) 
         case text() return () 
@@ -85,7 +86,23 @@ declare function s2instance:attributeGroup($node as node(), $doc as node()) {
 };
 
 declare function s2instance:choice($node as node(), $doc as node()) {
-    ()
+    let $subelements := $node/*
+    let $xsd-node-max-occurs := xs:string ($node/@maxOccurs)
+    return if ($xsd-node-max-occurs eq "unbounded")
+            then 
+
+            for $i in subsequence((1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 0, util:random(8) + 1)
+                let $position := util:random(count($subelements)) + 1
+                let $choice := $subelements[$position]
+                return
+                    s2instance:process-node($choice, $doc)
+            else
+                let $position := util:random(count($subelements)) + 1
+                let $choice := $subelements[$position]
+                return
+                    s2instance:process-node($choice, $doc)
+
+    
 };
 
 declare function s2instance:complexContent($node as node(), $doc as node()) {
@@ -115,40 +132,64 @@ return if (
     ) then true() else false()
 };
 
-declare function s2instance:generate-content($node as node(), $doc as node()) {
-    if ($node/@type)
-    then
-    switch ($node/@type/string()) 
-      case "xs:string" return "loo"
+declare function s2instance:generate-xsd-content($type as xs:string, $restrictions as node()*) {
+    switch ($type) 
+      case "xs:string" return if ($restrictions/xs:maxLength) then s2util:generate-lorumipsum($restrictions/xs:maxLength/@value/number())
+                                                              else  s2util:generate-lorumipsum(30)
+      case "xs:boolean" return "true"
       case "kitchen" return "scullery"
       default return "just a room"
+};
+
+declare function s2instance:generate-content($node as node(), $doc as node()) {
+    if ($node/@type)
+    then if (starts-with($node/@type/string(), "xs:"))
+            then s2instance:generate-xsd-content($node/@type/string(), ())
+            else 
+                let $base := string($node/@type)
+                let $eDoc := s2util:schema-from-prefix($base, $doc)
+                let $matchName := if (contains($base, ':'))
+                                    then substring-after($base, ':')
+                                    else $base
+                let $extension := $eDoc//*[string(@name) eq $matchName][1]
+                return s2instance:process-node($extension, $eDoc)
     else if ($node/@default)
     then xs:string ($node/@default)
     else ""
 };
 
 declare function s2instance:element($node as node(), $doc as node()) {
-    let $xsd-node-name := xs:string ($node/@name)
-    let $xsd-node-default := s2instance:generate-content($node, $doc)
-    let $xsd-node-max-occurs := xs:string ($node/@maxOccurs)
-    let $instance-node := if (s2instance:required($node)) then
+    let $pair := if ($node/@ref) then
+    let $base := string($node/@ref)
+    let $eDoc := s2util:schema-from-prefix($base, $doc)
+    let $matchName := if (contains($base, ':'))
+                        then substring-after($base, ':')
+                        else $base
+    let $extension := $eDoc//*[string(@name) eq $matchName][1]
+    return ($extension, $eDoc)
+    else ($node, $doc)
+    
+    let $xsd-node-name := xs:string ($pair[1]/@name)
+    let $xsd-node-default := s2instance:generate-content($pair[1], $pair[2])
+    let $xsd-node-max-occurs := xs:string ($pair[1]/@maxOccurs)
+    let $instance-node := if (s2instance:required($pair[1])) then
                     if ($xsd-node-max-occurs eq "unbounded")
                     then for $i in subsequence((1, 2, 3, 4, 5, 6, 7, 8, 9, 10), 0, util:random(8) + 1)
                         return
                         element { $xsd-node-name } { 
-                            s2instance:recurse($node, $doc),
+                            s2instance:recurse($pair[1], $pair[2]),
                             $xsd-node-default
                         }
                     else
                         element { $xsd-node-name } { 
-                            s2instance:recurse($node, $doc),
+                            s2instance:recurse($pair[1], $pair[2]),
                             $xsd-node-default
                         }
     
     else if (util:random(10) < 5)
                         then
                         element { $xsd-node-name } { 
-                            s2instance:recurse($node, $doc),
+                            s2instance:recurse($pair[1], $pair[2]),
                             $xsd-node-default
                         }
         else ()
@@ -161,7 +202,13 @@ declare function s2instance:enumeration($node as node(), $doc as node()) {
 };
 
 declare function s2instance:extension($node as node(), $doc as node()) {
-    ()
+    let $base := string($node/@base)
+    let $eDoc := s2util:schema-from-prefix($base, $doc)
+    let $matchName := if (contains($base, ':'))
+                        then substring-after($base, ':')
+                        else $base
+    let $extension := $eDoc//*[string(@name) eq $matchName][1]
+    return s2instance:process-node($extension, $eDoc)
 };
 
 declare function s2instance:field($node as node(), $doc as node()) {
@@ -173,7 +220,15 @@ declare function s2instance:fractionDigits($node as node(), $doc as node()) {
 };
 
 declare function s2instance:group($node as node(), $doc as node()) {
-    ()
+    if ($node/@ref) then
+    let $base := string($node/@ref)
+    let $eDoc := s2util:schema-from-prefix($base, $doc)
+    let $matchName := if (contains($base, ':'))
+                        then substring-after($base, ':')
+                        else $base
+    let $extension := $eDoc//*[string(@name) eq $matchName][1]
+    return s2instance:recurse($extension, $eDoc)
+    else s2instance:recurse($node, $doc)
 };
 
 declare function s2instance:import($node as node(), $doc as node()) {
@@ -237,7 +292,11 @@ declare function s2instance:redefine($node as node(), $doc as node()) {
 };
 
 declare function s2instance:restriction($node as node(), $doc as node()) {
-    ()
+let $base := $node/@base/string()
+return
+    if (starts-with($base, "xs:"))
+    then s2instance:generate-xsd-content($base, $node/node())
+    else s2instance:recurse($node, $doc)
 };
 
 declare function s2instance:schema($node as node(), $doc as node()) {
@@ -257,7 +316,17 @@ declare function s2instance:simpleContent($node as node(), $doc as node()) {
 };
 
 declare function s2instance:simpleType($node as node(), $doc as node()) {
-    ()
+    if ($node/@ref) then
+    let $base := string($node/@ref)
+    let $eDoc := s2util:schema-from-prefix($base, $doc)
+    let $matchName := if (contains($base, ':'))
+                        then substring-after($base, ':')
+                        else $base
+    let $extension := $eDoc//*[string(@name) eq $matchName][1]
+    return
+        s2instance:recurse($extension, $eDoc)
+    else 
+        s2instance:recurse($node, $doc)
 };
 
 declare function s2instance:totalDigits($node as node(), $doc as node()) {

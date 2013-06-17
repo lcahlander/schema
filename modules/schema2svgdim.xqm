@@ -1,24 +1,14 @@
 xquery version "3.0";
 
 module namespace s2svgdim="http://greatlinkup.com/ns/schema2svgdim";
+import module namespace s2util = "http://greatlinkup.com/ns/schema-util" at "schema-util.xqm";
 
 declare %public function s2svgdim:coordinate($x as xs:integer, $y as xs:integer) {
     <coordinates><x>{$x}</x><y>{$y}</y></coordinates>
 };
 
-declare %private function s2svgdim:schema-from-prefix($name as xs:string, $doc as node()) as node()
-{
-    let $namespace-uri := namespace-uri-from-QName(resolve-QName($name, $doc/xs:schema))
-    let $import := $doc/*/xs:import[@namespace eq string($namespace-uri)]
-    return if ($import) then 
-    let $schemaLocation := string($import/@schemaLocation)
-    let $fullURI := resolve-uri($schemaLoc, base-uri($doc))
-    return doc($fullURI)
-     else $doc
-};
-
 declare %public function s2svgdim:sum-coordinates($coordinates as node()*) {
-    if ($coordinates)
+    if ($coordinates//x)
     then
         let $x := max($coordinates//x/number())
         let $y := sum($coordinates//y/number())
@@ -27,9 +17,12 @@ declare %public function s2svgdim:sum-coordinates($coordinates as node()*) {
 };
 
 declare %public function s2svgdim:add-depth($coordinates as node()*) {
-    let $x := sum($coordinates//x/number())
-    let $y := max($coordinates//y/number())
-    return s2svgdim:coordinate($x, $y)
+    if ($coordinates//x)
+    then
+        let $x := sum($coordinates//x/number())
+        let $y := max($coordinates//y/number())
+        return s2svgdim:coordinate($x, $y)
+    else s2svgdim:coordinate(0, 0)
 };
 
 declare %public function s2svgdim:process-node($node as node(), $depth as xs:integer) {
@@ -83,7 +76,7 @@ declare %public function s2svgdim:process-node($node as node(), $depth as xs:int
 };
 
 declare function s2svgdim:recurse($node as node()?, $depth as xs:integer) as item()* {
-    if ($node) then 
+    if ($node  and $node/node()) then 
                 let $coordinates := for $cnode in $node/node() 
                                     return s2svgdim:process-node($cnode, $depth)
                 return s2svgdim:sum-coordinates($coordinates)
@@ -134,7 +127,7 @@ declare %public function s2svgdim:attributeGroup($node as node(), $depth as xs:i
 
 declare %public function s2svgdim:choice($node as node(), $depth as xs:integer) {
     if ($depth > 0) 
-    then s2svgdim:coordinate(250, 0)
+    then s2svgdim:add-depth((s2svgdim:coordinate(100, 70), s2svgdim:recurse($node, $depth - 1)))
     else s2svgdim:coordinate(0, 0)
 };
 
