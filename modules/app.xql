@@ -49,7 +49,7 @@ declare function app:item-detail($node as node(), $model as map(*)) {
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     
-    return s2bootstrap:process-node($root, $doc, map:new())
+    return try { s2bootstrap:process-node($root, $doc, map:new()) } catch * { <div class="alert alert-error">Problem in the processing of this XML Schema</div>}
 };
  (:~
  : This templating function displays the XML Schema item's graphical view in SVG. It will be called by the templating module if
@@ -64,7 +64,7 @@ declare function  app:svg($node as node(), $model as map(*)) {
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
     
-    return s2svg:svg($root, $doc, 3)
+    return try { s2svg:svg($root, $doc, 3)  } catch * { <div class="alert alert-error">Problem in the processing of this XML Schema</div>}
 };
 
  (:~
@@ -75,7 +75,7 @@ declare function  app:svg($node as node(), $model as map(*)) {
  : @param $model a map containing arbitrary data - used to pass information between template calls
  :)
  declare function  app:svgdim($node as node(), $model as map(*)) {
-
+    try {
     let $schema := request:get-parameter('schema', '')
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
@@ -85,7 +85,8 @@ declare function  app:svg($node as node(), $model as map(*)) {
     <div class="code" data-language="xml">
             { replace($elem, "^\s+", "") }
             </div>)
-};
+    } catch * { <div class="alert alert-error">Problem in the processing of this XML Schema</div>}
+ };
 
  (:~
  : This templating function displays the XML Schema item's graphical view dimensions in SVG. It will be called by the templating module if
@@ -95,7 +96,7 @@ declare function  app:svg($node as node(), $model as map(*)) {
  : @param $model a map containing arbitrary data - used to pass information between template calls
  :)
  declare function  app:instance($node as node(), $model as map(*)) {
-
+    try {
     let $schema := request:get-parameter('schema', '')
     let $doc:= doc($schema)
     let $root := $doc//*[@name eq request:get-parameter('name', '') and local-name(.) eq request:get-parameter('type', '')]
@@ -103,4 +104,5 @@ declare function  app:svg($node as node(), $model as map(*)) {
     return <div class="code" data-language="xml">
             { replace($elem, "^\s+", "") }
             </div>
-};
+ } catch * { <div class="alert alert-error">Problem in the processing of this XML Schema</div>}
+ };

@@ -136,9 +136,18 @@ declare function s2instance:generate-xsd-content($type as xs:string, $restrictio
     switch ($type) 
       case "xs:string" return if ($restrictions/xs:maxLength) then s2util:generate-lorumipsum($restrictions/xs:maxLength/@value/number())
                                                               else  s2util:generate-lorumipsum(30)
+      case "xs:decimal" return "1"
+      case "xs:float" return "1.0"
+      case "xs:base64Binary" return "1"
+      case "xs:short" return "1"
+      case "xs:date" return string(current-date())
+      case "xs:time" return string(current-time())
+      case "xs:integer" return "1"
+      case "xs:dateTime" return string(current-dateTime())
       case "xs:boolean" return "true"
-      case "kitchen" return "scullery"
-      default return "just a room"
+      case "xs:Name" return  if ($restrictions/xs:maxLength) then s2util:generate-lorumipsum($restrictions/xs:maxLength/@value/number())
+                                                              else  s2util:generate-lorumipsum(30)
+      default return "Type {$type} sample instance has not been implemented"
 };
 
 declare function s2instance:generate-content($node as node(), $doc as node()) {
@@ -292,11 +301,17 @@ declare function s2instance:redefine($node as node(), $doc as node()) {
 };
 
 declare function s2instance:restriction($node as node(), $doc as node()) {
-let $base := $node/@base/string()
-return
-    if (starts-with($base, "xs:"))
-    then s2instance:generate-xsd-content($base, $node/node())
-    else s2instance:recurse($node, $doc)
+    if ($node//xs:enumeration) 
+    then
+        let $enum-list := $node//xs:enumeration/@value/string()
+        let $item-number := util:random(count($enum-list)) + 1
+        return $enum-list[$item-number]
+    else 
+        let $base := $node/@base/string()
+        return
+            if (starts-with($base, "xs:"))
+            then s2instance:generate-xsd-content($base, $node/node())
+            else s2instance:recurse($node, $doc)
 };
 
 declare function s2instance:schema($node as node(), $doc as node()) {

@@ -237,7 +237,15 @@ declare %public function s2svg:fractionDigits($node as node(), $doc as node(), $
 };
 
 declare %public function s2svg:group($node as node(), $doc as node(), $depth as xs:double) {
-    ()
+    if ($node/@ref) then
+    let $base := string($node/@ref)
+    let $eDoc := s2util:schema-from-prefix($base, $doc)
+    let $matchName := if (contains($base, ':'))
+                        then substring-after($base, ':')
+                        else $base
+    let $extension := $eDoc//*[string(@name) eq $matchName][1]
+    return s2svg:recurse($extension, $eDoc, $depth)
+    else s2svg:recurse($node, $doc, $depth)
 };
 
 declare %public function s2svg:import($node as node(), $doc as node(), $depth as xs:double) {

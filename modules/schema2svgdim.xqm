@@ -181,7 +181,17 @@ declare %public function s2svgdim:fractionDigits($node as node(), $depth as xs:i
 
 declare %public function s2svgdim:group($node as node(), $depth as xs:integer) {
     if ($depth > 0) 
-    then s2svgdim:add-depth((s2svgdim:coordinate(250, 70), s2svgdim:recurse($node, $depth - 1)))
+    then 
+    if ($node/@ref) then
+    let $doc := root($node)
+    let $base := string($node/@ref)
+    let $eDoc := s2util:schema-from-prefix($base, $doc)
+    let $matchName := if (contains($base, ':'))
+                        then substring-after($base, ':')
+                        else $base
+    let $extension := $eDoc//*[string(@name) eq $matchName][1]
+    return s2svgdim:add-depth((s2svgdim:coordinate(250, 70), s2svgdim:recurse($extension, $depth - 1)))
+    else s2svgdim:add-depth((s2svgdim:coordinate(250, 70), s2svgdim:recurse($node, $depth - 1)))
     else s2svgdim:coordinate(0, 0)
 };
 

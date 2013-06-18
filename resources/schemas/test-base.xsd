@@ -12,6 +12,8 @@
                 </xs:annotation>
             </xs:element>
             <xs:element name="baz" type="canonical:xyzzy" default="qq"/>
+            <xs:element name="bax" type="canonical:plover"/>
+            <xs:element name="jing" type="canonical:mypick"/>
         </xs:sequence>
     </xs:group>
     <xs:simpleType name="xyzzy">
@@ -21,6 +23,12 @@
         <xs:restriction base="xs:Name">
             <xs:maxLength value="30"/>
         </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="plover">
+        <xs:annotation>
+            <xs:documentation/>
+        </xs:annotation>
+        <xs:restriction base="xs:dateTime"/>
     </xs:simpleType>
     <xs:simpleType name="penaltyPercent">
         <xs:annotation>
