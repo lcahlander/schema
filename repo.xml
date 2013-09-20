@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<meta xmlns="http://exist-db.org/xquery/repo">
+    <description>Schema Management</description>
+    <author>Loren Cahlander</author>
+    <website>http://greatlinkup.com</website>
+    <status>alpha</status>
+    <license>GNU-LGPL</license>
+    <copyright>true</copyright>
+    <type>application</type>
+    <target>schema</target>
+    <prepare>pre-install.xql</prepare>
+    <finish/>
+    <permissions user="schema-admin" password="FOO" group="schema" mode="rw-rw-r--"/>
+</meta>

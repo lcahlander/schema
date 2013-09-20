@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://greatlinkup.com/NS/changelog" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" version="1.0" targetNamespace="http://greatlinkup.com/NS/changelog">
+    <xs:annotation>
+        <xs:documentation>
+            <p>This schema is for managing changelogs for the schema directory.</p>
+        </xs:documentation>
+    </xs:annotation>
+    <xs:element name="log-entries">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="changelog" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="changelog">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="schema"/>
+                <xs:element ref="timestamp"/>
+                <xs:element ref="user"/>
+                <xs:element ref="div"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="schema" type="xs:string"/>
+    <xs:element name="timestamp" type="xs:dateTime"/>
+    <xs:element name="user" type="xs:NCName"/>
+    <xs:element name="div">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:any/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="parameters">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="query"/>
+                <xs:element ref="sprint"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="query" type="xs:string"/>
+    <xs:element name="sprint" type="xs:string"/>
+</xs:schema>

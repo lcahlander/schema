@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<div xmlns="http://www.w3.org/1999/xhtml" class="templates:surround?with=templates/page2.html&amp;at=content">
+    <div class="row">
+        <div class="col-lg-1">&#160;</div>
+        <div class="col-lg-9">
+            <div class="page-header">
+                <h1 data-template="config:app-title">Generated page</h1>
+                <!-- 
+                <xf:model>
+                    <xf:instance xmlns="" id="ftsearch">
+                        <parameters>
+                            <q/>
+                        </parameters>
+                    </xf:instance>
+                    <xf:submission id="ftsearch" resource="search" method="get" serialization="application/x-www-form-urlencoded" ref="instance('ftsearch')" targetref="instance('all')" replace="instance"/>
+                </xf:model>
+                <table>
+                    <tr>
+                        <td>
+                            <xf:input class="search" ref="instance('ftsearch')/q" incremental="true">
+                                <xf:send submission="ftsearch" ev:event="xforms-value-changed"/>
+                            </xf:input>
+                        </td>
+                        <td>
+                            <xf:trigger class="search">
+                                <xf:label>Clear</xf:label>
+                                <xf:action>
+                                    <xf:setvalue ref="instance('ftsearch')/q"/>
+                                </xf:action>
+                            </xf:trigger>
+                        </td>
+                    </tr>
+                </table>
+                -->
+            </div>
+            <div class="row-fluid">
+                <ul class="nav nav-tabs" id="myTab">
+                    <li class="active">
+                        <a href="#directory" data-toggle="tab">Directory</a>
+                    </li>
+                    <li>
+                        <a href="#changelog" data-toggle="tab">Change Log</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="directory">
+                        <div class="hidden-md hidden-lg" data-template="app:sprint-schemas" data-template-columns="1"/>
+                    </div>
+                    <div class="tab-pane" id="changelog">
+                        <div xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:xf="http://www.w3.org/2002/xforms">
+                            <xf:model schema="../resources/schemas/changelog.xsd">
+                                <xf:instance xmlns="" id="all">
+                                    <log-entries/>
+                                </xf:instance>
+                                <xf:instance xmlns="" id="template">
+                                    <changelog>
+                                        <schema/>
+                                        <timestamp/>
+                                        <user/>
+                                        <div/>
+                                    </changelog>
+                                </xf:instance>
+                                <xf:instance xmlns="" id="search">
+                                    <parameters>
+                                        <query/>
+                                        <sprint>
+                                            <span data-template="app:current-sprint"/>
+                                        </sprint>
+                                    </parameters>
+                                </xf:instance>
+                                <xf:bind id="changelog-id" nodeset="//changelog/@id" relevant="true()"/>
+                                <xf:submission id="load" resource="../changelog" method="get" replace="instance">
+                                    <xf:message ev:event="xforms-submit-done" level="ephemeral">changelog list loaded.</xf:message>
+                                </xf:submission>
+                                <xf:submission id="save" resource="../changelog" method="put" replace="instance" ref="//changelog[index('changelog-repeat')]">
+                                    <xf:message ev:event="xforms-submit-done" level="ephemeral">changelog saved.</xf:message>
+                                    <xf:message ev:event="xforms-submit-error" level="ephemeral">An error occurred.</xf:message>
+                                </xf:submission>
+                                <xf:submission id="delete" resource="../changelog/{instance('all')//changelog[index('changelog-repeat')]/@id}" method="delete" replace="instance">
+                                    <xf:message ev:event="xforms-submit-done" level="ephemeral">changelog deleted.</xf:message>
+                                    <xf:message ev:event="xforms-submit-error" level="ephemeral">An error occurred.</xf:message>
+                                </xf:submission>
+                                <xf:submission id="search" resource="../cl-search" method="get" serialization="application/x-www-form-urlencoded" ref="instance('search')" targetref="instance('all')" replace="instance"/>
+                                <xf:action ev:event="xforms-ready">
+                                    <xf:send submission="load"/>
+                                </xf:action>
+                            </xf:model>
+                            <div class="row-fluid">
+                                <div>
+                                    <table>
+                                        <tr>
+                                            <td>
+                                                <xf:input class="search" ref="instance('search')/query" incremental="true">
+                                                    <xf:send submission="search" ev:event="xforms-value-changed"/>
+                                                </xf:input>
+                                            </td>
+                                            <td>
+                                                <xf:trigger class="search">
+                                                    <xf:label>Clear</xf:label>
+                                                    <xf:action>
+                                                        <xf:setvalue ref="instance('search')/query"/>
+                                                    </xf:action>
+                                                </xf:trigger>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table class="table">
+                                        <thead>
+                                            <th>Schema</th>
+                                            <th>Timestamp</th>
+                                            <th>User</th>
+                                            <th>Description</th>
+                                        </thead>
+                                        <tbody id="changelog-repeat" xf:repeat-nodeset="//changelog">
+                                            <tr>
+                                                <td>
+                                                    <xf:output ref="schema"/>
+                                                </td>
+                                                <td>
+                                                    <xf:output value="timestamp" appearance="iso8601:YYYY"/>
+                                                </td>
+                                                <td>
+                                                    <xf:output ref="user"/>
+                                                </td>
+                                                <td>
+                                                    <xf:output ref="div" mediatype="text/html" incremental="true"/>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <xf:group appearance="minimal" class="action-buttons">
+                                        <xf:submit submission="delete">
+                                            <xf:label>Delete</xf:label>
+                                        </xf:submit>
+                                        <xf:trigger>
+                                            <xf:label>New</xf:label>
+                                            <xf:action>
+                                                <xf:insert nodeset="//changelog" at="last()" position="after" origin="instance('template')"/>
+                                            </xf:action>
+                                        </xf:trigger>
+                                    </xf:group>
+                                    <xf:group ref="//changelog[index('changelog-repeat')]" appearance="full" class="edit">
+                                        <xf:input ref="schema">
+                                            <xf:label>Schema:</xf:label>
+                                        </xf:input>
+                                        <xf:textarea ref="div" mediatype="text/html">
+                                            <xf:label>Description:</xf:label>
+                                        </xf:textarea>
+                                    </xf:group>
+                                    <xf:submit submission="save">
+                                        <xf:label>Save</xf:label>
+                                    </xf:submit>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-2">
+            <span class="label label-default">Sprints</span>
+            <div data-template="app:sprint-list"/>
+        </div>
+    </div>
+</div>
